@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+# https://arduino.github.io/arduino-cli/0.21/library-specification/#keywordstxt-format
+# KEYWORD1 Classes, datatypes, and C++ keywords
+# KEYWORD2 Methods and functions
+# KEYWORD3 setup and loop functions, as well as the Serial keywords
+# LITERAL1 Constants
+# LITERAL2 Built-in variables (unused by default)
+
+
+#######################################
+# Classes, datatypes (KEYWORD1)
+#######################################
+ENS220						KEYWORD1
+ens220						KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin						KEYWORD2
+isConnected					KEYWORD2
+enableDebugging				KEYWORD2
+disableDebugging			KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+CONSTANT					LITERAL1
+
