@@ -8,10 +8,10 @@ The ENS220 is an ultra-low-power, high-accuracy barometric pressure and temperat
 This enables new use cases in activity tracking, indoor navigation/localization, fall- and liquid-level detection.
 
 ## Links
-* [Datasheet](https://www.sciosense.com/wp-content/uploads/documents/SC-001717-DS-14-ENS220-Datasheet.pdf)
+* [Datasheet](https://www.sciosense.com/wp-content/uploads/documents/ENS220-Datasheet.pdf)
 * Application notes (coming soon)
 * Buy the ENS220 on [Mouser](https://mou.sr/3K2wfLJ) or [Digikey](https://www.digikey.nl/en/products/detail/sciosense/ens220s-bglt/21278457)
-* Buy the ENS220 evaluation kit (comming soon)
+* Buy the ENS220 evaluation kit on [Mouser](https://mou.sr/3PQWatb)
 * [Further information about the ENS220](https://www.sciosense.com/products/pressure-sensor/ens220/)  
 
  
