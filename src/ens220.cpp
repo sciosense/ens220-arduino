@@ -144,20 +144,23 @@ namespace ScioSense
         if (result == Result::Ok)
         {
 
-            if (hasFlag(modeConfiguration, ModeConfiguration::MeasurePressure) && !hasFlag(dataStatus, DataStatus::PressureReady))
+            result = Result::Invalid;
+
+            if (hasFlag(modeConfiguration, ModeConfiguration::MeasurePressure) && hasFlag(dataStatus, DataStatus::PressureReady))
             {
-                result = Result::Invalid;
+                result = Result::Ok;
             }
 
-            if (hasFlag(modeConfiguration, ModeConfiguration::MeasureTemperature) && !hasFlag(dataStatus, DataStatus::TemperatureReady))
+            if (hasFlag(modeConfiguration, ModeConfiguration::MeasureTemperature) && hasFlag(dataStatus, DataStatus::TemperatureReady))
             {
-                result = Result::Invalid;
+                result = Result::Ok;
             }
 
             if (result == Result::Ok)
             {
                 result = read(RegisterAddress::PRESS_OUT_XL, buffer, BufferInfo::PressureSize + BufferInfo::TemperatureSize);
             }
+
         }
 
         debug(__func__, result);
