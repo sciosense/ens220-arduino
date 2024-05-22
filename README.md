@@ -28,7 +28,7 @@ For the installation of the ESP32 in the Arduino IDE, see [Arduino ESP32 Install
 
 ## Installation
 
-### Installation via Arduino Library Manager (coming soon)
+### Installation via Arduino Library Manager
 - In the Arduino IDE, navigate to the Arduino Library Manager on the left side (or, alternatively, select Sketch > 
 Include Library > Manage Libraries...)
 - Search for `ScioSense_ENS220`
