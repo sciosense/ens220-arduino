@@ -55,7 +55,9 @@ The program will now output on the Serial port not only the detected drops, but 
 - Drop event detected. A "***1***" indicates a successful detection
 
 To transform the raw pressure ***i*** into a relative height in meters, the following formula gives a rough approximation by substracting it from the initial pressure and dividing by a conversion factor:
-$$ Height_{meters}[i] = \frac{(Pressure_{Raw}[0]-Pressure_{Raw}[i])}{768}$$
+```math
+Height_{meters}[i] = \frac{Pressure_{Raw}[0]-Pressure_{Raw}[i]}{768}
+```
 The firmware calculates a more accurate conversion factor taking into account the measured temperature and pressure, but this calculation gives a result within 20% over a wide range of atmospheric conditions.
 
 
