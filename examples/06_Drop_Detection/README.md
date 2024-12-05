@@ -21,7 +21,7 @@ The firmware is expecting the following signals in these pins of the ESP32 DevKi
 - I2C SCL: GPIO22
 - INT: GPIO23
 
-<img src="images/ens220_i2c+int_connections.png" width="1000">
+<img src="../../images/ens220_i2c+int_connections.png" width="1000">
 
 ## Output
 Upon opening the Serial port at a 921600 baudrate the demo will output:
