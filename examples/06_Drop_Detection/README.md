@@ -10,6 +10,8 @@ Two different factors are used to detect a fall:
 The spike in pressure upon impact is crucial for differenciating a drop from normal movement. This signal is caused by stress on the PCB due to the collision with the ground, and is therefore affected by the geometries of the PCB and housing. Adjustment of the impact strength parameter must therefore be adjusted once the final configuration was created to maximize the successful detections and avoid false positives.
 
 A detailed explanation of the working principle can be found at the [ENS220 Application note - Fall Detection](https://www.sciosense.com/wp-content/uploads/2024/04/ENS220-Application-Note-Fall-Detection.pdf).
+> [!IMPORTANT]
+> Please note that the described algorithm is subject of a patent application. Users of the ENS220S pressure sensor are granted royalty-free rights to utilize the algorithm.
 
 ## Connections
 The example was designed to work with a ESP32 and an ENS220 Evaluation kit PCB.
@@ -18,6 +20,8 @@ The firmware is expecting the following signals in these pins of the ESP32 DevKi
 - I2C SDA: GPIO21
 - I2C SCL: GPIO22
 - INT: GPIO23
+
+<img src="images/ens220_i2c+int_connections.png" width="1000">
 
 ## Output
 Upon opening the Serial port at a 921600 baudrate the demo will output:

@@ -61,7 +61,7 @@ with the ENS220 breakout board for I2C communication.
 |          SDA          |  G21  |
 |          SCL          |  G22  |
 
-<img src="images/i2c_pinout_esp32.png" width="1000">
+<img src="images/ens220_i2c_connections.png" width="1000">
 
 ### Example with ESP32 (SPI)
 This example shows how to wire a [ESP32DevKitC](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html#get-started-esp32-devkitc-board-front) 
@@ -75,7 +75,7 @@ with the ENS220 breakout board for SPI communication.
 |          SDO          |  G19  |
 |          CSN          |  G05  |
 
-<img src="images/spi_pinout_esp32.png" width="1000">
+<img src="images/ens220_spi_connections.png" width="1000">
 
 ### Interrupt functionality
 To use the ENS220's interrupt functionality connect the interrupt pin of the ENS220 to a GPIO pin of your Arduino. The 
