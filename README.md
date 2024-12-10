@@ -20,6 +20,7 @@ This enables new use cases in activity tracking, indoor navigation/localization,
 This library includes two special examples:
 * 05_Event_Detection: This algorithm allows you to detect when a door or window has been opened in your room.
 * 06_Fall_Detection: This algorithm allows you to detect falls with the ENS220S only (no accelerometer required). More detailed documentation can be found [here](examples/06_Fall_Detection).
+
 Both libraries demonstrate the amazing capabilities of the ENS220 to measure relative pressure with low noise and high data rate.
  
 ## Prerequisites
