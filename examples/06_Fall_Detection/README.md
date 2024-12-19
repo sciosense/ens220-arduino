@@ -14,7 +14,7 @@ A detailed explanation of the working principle can be found at the [ENS220 Appl
 > Please note that the described algorithm is subject of a patent application. Users of the ENS220S pressure sensor are granted royalty-free rights to utilize the algorithm.
 
 ## Connections
-The example was designed to work with a ESP32 and an ENS220 Evaluation kit PCB.
+The example was designed to work with a ESP32 and an ENS220 Evaluation kit PCB. Make sure that the ENS220 sensor is mechanically fixed to the (falling) object. 
 
 The firmware is expecting the following signals in these pins of the ESP32 DevKitC v4:
 - I2C SDA: GPIO21
