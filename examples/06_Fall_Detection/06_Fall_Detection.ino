@@ -42,7 +42,7 @@ AlgorithmConstants algorithm_constants; // Algorithm constants struct
 // Global variables
 float latestPressure = 0;
 float latestTemp = 0;
-uint32_t maximum_fall_pressure_peak_raw = 0;
+int32_t maximum_fall_pressure_peak_raw = 0;
 float conversion_pa_to_m = 0;
 unsigned long current_ms = 0;
 
@@ -101,7 +101,7 @@ void loop()
 {        
     ContinuousModeWithFIFO_loop(meas_buffer);
 
-    uint32_t measured_drop_height_raw = 0;
+    int32_t measured_drop_height_raw = 0;
     unsigned long data_collection_finished = millis();
     unsigned long curr_time = data_collection_finished - (ENS220_BUFFERSIZE-1) * t_individual_meas_ms;
 
