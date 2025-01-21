@@ -77,8 +77,9 @@ ENS220::Result I2cInterface::write(const ENS220::RegisterAddress& address, uint8
 
     if( softI2C->i2c_start((slaveAddress<<1)|I2C_WRITE) )
     {
+        int size_int = (int)size;
         softI2C->i2c_write((uint8_t)address);    // send desired register to device   
-        for( int i=0; i<size; i++)
+        for( int i=0; i<size_int; i++)
         {
             softI2C->i2c_write(data[i]);         // send data
         }

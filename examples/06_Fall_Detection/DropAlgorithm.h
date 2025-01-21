@@ -17,7 +17,7 @@ typedef struct {
     int32_t index_window;
     int32_t drop_count;
     double last_baseline_update;
-    double spike_height;
+    int32_t spike_height;
     double spike_duration;
 } DropDetectionState;
 

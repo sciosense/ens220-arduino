@@ -135,10 +135,6 @@ void detect_events(float p, float t, float m, float d, float alpha) {
   }
 }
 
-
-
-
-
 void setup()
 {
     pinMode(OPTIONAL_LED_PIN, OUTPUT);
@@ -160,7 +156,7 @@ void setup()
       result = ens220.update();
     }
     first_pressure_Pa = ens220.getPressurePascal();
-    state = {.first_event_detected = 1, .norm=1, .mean_absolute_deviation=2.0, .p_1=first_pressure_Pa, .t_1=relative_time_ms/1000.};
+    state = {.event_detected=0, .first_event_lower_than_threshold=0, .first_event_detected=1, .norm=1, .average = 0, .mean_absolute_deviation=2.0, .p_1=first_pressure_Pa, .t_1=relative_time_ms/1000.};
 
 }
 
@@ -201,12 +197,10 @@ void ens220_setup()
     ens220.startContinuousMeasure(ENS220::Sensor::Pressure);
 }
 
-
-
 void loop()
 { 
 
-  while ((millis()-last_readout_time_ms) >= (target_sampling_interval_ms)) {
+  while ((((int)millis())-last_readout_time_ms) >= (target_sampling_interval_ms)) {
 
     // Check the DATA_STAT from the sensor. Read data, if available
     relative_time_ms = millis();
