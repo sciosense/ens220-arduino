@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ens220.h>
-#include "i2c_interface.h"
 #include "DropAlgorithm.h"
 
 // If the following line is un-commented, debug messages will be printed through the Serial port
@@ -31,10 +30,7 @@
 #define GRAVITATIONAL_ACCELERATION_SURFACE_M_S2 9.81    // Acceleration of gravity at the surface of the Earth in m/s2
 
 
-using namespace ScioSense;
-
 // Object creation
-I2cInterface i2c_1;                     // I2C communication object
 ENS220 ens220;                          // ENS220 object
 DropDetectionState* algorithm_state;     // Algorithm state struct
 AlgorithmConstants algorithm_constants; // Algorithm constants struct
@@ -42,7 +38,7 @@ AlgorithmConstants algorithm_constants; // Algorithm constants struct
 // Global variables
 float latestPressure = 0;
 float latestTemp = 0;
-uint32_t maximum_fall_pressure_peak_raw = 0;
+int32_t maximum_fall_pressure_peak_raw = 0;
 float conversion_pa_to_m = 0;
 unsigned long current_ms = 0;
 
@@ -55,14 +51,23 @@ uint8_t algorithm_drop_event_buffer[ENS220_BUFFERSIZE];
 
 int t_individual_meas_ms = 2;   // Time it takes to take a measurement, depends on configuration
 
+void StartEns2210I2cCommunication();
+void ConfigureENS220ContinuousMode();
+void ContinuousModeWithFIFO_loop(uint32_t *buffer);
+void ConfigureENS220SingleShotMode();
+void SingleShot_Measure(float* temperature_k, float* pressure_pa);
+void ConfigureAlgorithmConstants(double min_height_diff_m, double min_impact_height_m, double max_height_diff_m, int32_t window_size, double baseline_update_period);
+void InitializeAlgorithmState(int initial_pressure);
+float GetConversionFactorDryAirPaToM(float temperature_k, float pressure_pa);
+
 void setup()
 {
     Serial.begin(SERIAL_BAUDRATE);
-    Serial.println("Bungee demo starting");    
+    Serial.println("Bungee demo starting");
 
     #ifdef DEBUG_ENS220
         ens220.enableDebugging(Serial);
-    #endif         
+    #endif
 
     Wire.begin();
     StartEns2210I2cCommunication();
@@ -84,7 +89,7 @@ void setup()
     InitializeAlgorithmState(pressure_pa * CONVERSION_PA_TO_RAW);
 
     Serial.println("Algorithm ready");
-    
+
     ConfigureENS220ContinuousMode();
     Serial.println("ENS220 configured");
 
@@ -98,15 +103,15 @@ void setup()
 }
 
 void loop()
-{        
+{
     ContinuousModeWithFIFO_loop(meas_buffer);
 
-    uint32_t measured_drop_height_raw = 0;
+    int32_t measured_drop_height_raw = 0;
     unsigned long data_collection_finished = millis();
     unsigned long curr_time = data_collection_finished - (ENS220_BUFFERSIZE-1) * t_individual_meas_ms;
 
-    for(int measurement=0; measurement<ENS220_BUFFERSIZE; measurement++) 
-    {      
+    for(int measurement=0; measurement<ENS220_BUFFERSIZE; measurement++)
+    {
         detect_drop_impact_state(algorithm_state, meas_buffer[measurement], curr_time, algorithm_constants);
         algorithm_state_buffer[measurement] = algorithm_state->state;
         algorithm_window_idx_buffer[measurement] = algorithm_state->index_window;
@@ -115,8 +120,8 @@ void loop()
         if(algorithm_state->drop_event)
         {
             // A drop was detected and the measurement completed
-            measured_drop_height_raw = algorithm_state->spike_height;  
-            
+            measured_drop_height_raw = algorithm_state->spike_height;
+
             // Coerce drop height to the harcoded limits
             if( measured_drop_height_raw > maximum_fall_pressure_peak_raw )
             {
@@ -126,13 +131,13 @@ void loop()
             {
                 measured_drop_height_raw = 0;
             }
-        }  
+        }
         time_buffer[measurement] = curr_time;
-        curr_time += t_individual_meas_ms;        
+        curr_time += t_individual_meas_ms;
     }
-    
+
     #ifdef DEBUG_MEASUREMENTS
-        for(int measurement=0; measurement<ENS220_BUFFERSIZE; measurement++) 
+        for(int measurement=0; measurement<ENS220_BUFFERSIZE; measurement++)
         {
             Serial.print(time_buffer[measurement]);
             Serial.print(",");
@@ -150,19 +155,19 @@ void loop()
     {
         Serial.print("Drop ");
         // We transform the raw impact height into pressure in Pascals and then into height in meters
-        float drop_height = ((float)measured_drop_height_raw) * conversion_pa_to_m / CONVERSION_PA_TO_RAW; 
+        float drop_height = ((float)measured_drop_height_raw) * conversion_pa_to_m / CONVERSION_PA_TO_RAW;
         Serial.print(drop_height);
-        Serial.println("m");             
+        Serial.println("m");
         measured_drop_height_raw = 0;
-    }     
+    }
 }
 
 void StartEns2210I2cCommunication()
-{    
+{
     // Start the communication, confirm the device PART_ID, and read the device UID
-    i2c_1.begin(Wire, ENS220_I2C_ADDRESS);    
-    
-    while(ens220.begin(&i2c_1) != true)
+    ens220.begin(&Wire, ENS220_I2C_ADDRESS);
+
+    while(ens220.init() != true)
     {
         Serial.println("Waiting for I2C to start");
         delay(1000);
@@ -177,20 +182,20 @@ void ConfigureENS220ContinuousMode()
     // Choose the desired configuration of the sensor. In this example we will use the Lowest Noise settings from the datasheet
     ens220.setDefaultConfiguration();
     // Set the Pressure ADC conversion time (MEAS_CFG register, field P_CONV)
-    ens220.setPressureConversionTime(ENS220::PressureConversionTime::T_8_2);
-    // Set the Oversampling of pressure measurements (OVS_CFG register, field OVSP) 
-    ens220.setOversamplingOfPressure(ENS220::Oversampling::N_1);
+    ens220.setPressureConversionTime(ENS220_PRESSURE_CONVERSION_TIME_T_8_2);
+    // Set the Oversampling of pressure measurements (OVS_CFG register, field OVSP)
+    ens220.setOversamplingOfPressure(ENS220_OVERSAMPLING_N_1);
     // Set the Oversampling of temperature measurements (OVS_CFG register, field OVST)
-    ens220.setOversamplingOfTemperature(ENS220::Oversampling::N_1);
+    ens220.setOversamplingOfTemperature(ENS220_OVERSAMPLING_N_1);
     // Set the ratio between P and T measurements as produced by the measurement engine (MEAS_CFG register, field PT_RATE)
-    ens220.setPressureTemperatureRatio(ENS220::PressureTemperatureRatio::PT_32);        
+    ens220.setPressureTemperatureRatio(ENS220_PRESSURE_TEMPERATURE_RATIO_PT_32);
     // Set whether to use the FIFO buffer, a moving average, or none (MODE_CFG register, field FIFO_MODE)
-    ens220.setPressureDataPath(ENS220::PressureDataPath::Fifo);
+    ens220.setPressureDataPath(ENS220_PRESSURE_DATA_PATH_FIFO);
     // Enable interrupts (INTF_CFG register, field INT_EN)
-    ens220.setInterfaceConfiguration(ENS220::InterfaceConfiguration::InterruptEnable);
+    ens220.setInterfaceConfiguration(ENS220_INTERFACE_CONFIGURATION_INTERRUPT_ENABLE);
     // Choose events that generate interrupts (INT_CFG register)
-    ens220.setInterruptConfiguration(ENS220::InterruptConfiguration::TemperatureDataReady | ENS220::InterruptConfiguration::PressureFifoFull); 
-    
+    ens220.setInterruptConfiguration(ENS220_INTERRUPT_CONFIGURATION_TEMPERATURE_DATA_READY | ENS220_INTERRUPT_CONFIGURATION_PRESSURE_FIFO_FULL);
+
     // Set which pin to use to poll for interrupts
     ens220.setInterruptPin(INTN_1);
 
@@ -198,51 +203,51 @@ void ConfigureENS220ContinuousMode()
     ens220.writeConfiguration();
 
     // Start continuous measurements
-    ens220.startContinuousMeasure(ENS220::Sensor::Pressure);
+    ens220.startContinuousMeasure(ENS220_SENSOR_PRESSURE);
 }
 
 void ContinuousModeWithFIFO_loop(uint32_t *buffer)
-{    
+{
     // Poll the interrupt pin until a new value is available
     ens220.waitInterrupt();
 
     // Check the DATA_STAT from the sensor. If data is available, it reads it
     auto result= ens220.update();
-    if(result == ENS220::Result::Ok)
-    {      
-        if(hasFlag(ens220.getInterruptStatus(), ENS220::InterruptStatus::FifoFull))
+    if(result == RESULT_OK)
+    {
+        if(ens220.hasInterruptStatusFlag(ENS220_INTERRUPT_STATUS_FIFO_FULL))
         {
             for(int i=0; i<ENS220_BUFFERSIZE; i++)
             {
-                buffer[i] = ens220.getPressureRaw(i);              
-            }            
+                buffer[i] = ens220.getPressureRaw(i);
+            }
         }
 
-        if(hasFlag(ens220.getInterruptStatus(), ENS220::InterruptStatus::Temperature))
+        if(ens220.hasInterruptStatusFlag(ENS220_INTERRUPT_STATUS_TEMPERATURE))
         {
             // Send the temperature value that was collected during the ens220.update()
             Serial.print("T[C]:");
-            Serial.println(ens220.getTempCelsius());          
+            Serial.println(ens220.getTempCelsius());
         }
     }
 }
 
 void ConfigureENS220SingleShotMode()
-{    
+{
     // Choose the desired configuration of the sensor. In this example we will use the Lowest Noise settings from the datasheet
     ens220.setDefaultConfiguration();
     // Set the Pressure ADC conversion time (MEAS_CFG register, field P_CONV)
-    ens220.setPressureConversionTime(ENS220::PressureConversionTime::T_16_4);
-    // Set the Oversampling of pressure measurements (OVS_CFG register, field OVSP) 
-    ens220.setOversamplingOfPressure(ENS220::Oversampling::N_128);
+    ens220.setPressureConversionTime(ENS220_PRESSURE_CONVERSION_TIME_T_16_4);
+    // Set the Oversampling of pressure measurements (OVS_CFG register, field OVSP)
+    ens220.setOversamplingOfPressure(ENS220_OVERSAMPLING_N_128);
     // Set the Oversampling of temperature measurements (OVS_CFG register, field OVST)
-    ens220.setOversamplingOfTemperature(ENS220::Oversampling::N_128);
+    ens220.setOversamplingOfTemperature(ENS220_OVERSAMPLING_N_128);
     // Set the ratio between P and T measurements as produced by the measurement engine (MEAS_CFG register, field PT_RATE)
-    ens220.setPressureTemperatureRatio(ENS220::PressureTemperatureRatio::PT_1);
+    ens220.setPressureTemperatureRatio(ENS220_PRESSURE_TEMPERATURE_RATIO_PT_1);
     // Set the operation to One shot (STBY_CFG register, field STBY_T)
-    ens220.setStandbyTime(ENS220::StandbyTime::OneShotOperation);
+    ens220.setStandbyTime(ENS220_STANDBY_TIME_ONE_SHOT_OPERATION);
     // Set whether to use the FIFO buffer, a moving average, or none (MODE_CFG register, field FIFO_MODE)
-    ens220.setPressureDataPath(ENS220::PressureDataPath::Direct);
+    ens220.setPressureDataPath(ENS220_PRESSURE_DATA_PATH_DIRECT);
     // Write the desired configuration into the sensor
     ens220.writeConfiguration();
 }
@@ -250,16 +255,16 @@ void ConfigureENS220SingleShotMode()
 void SingleShot_Measure(float* temperature_k, float* pressure_pa)
 {
     // Start single shot measurement
-    ens220.singleShotMeasure(ENS220::Sensor::TemperatureAndPressure);
+    ens220.singleShotMeasure(ENS220_SENSOR_TEMPERATURE_AND_PRESSURE);
 
     // Wait until the measurement is ready
     ens220.waitSingleShot();
 
     // Check the DATA_STAT from the sensor. If data is available, it reads it
-    auto result = ens220.update();   
-    if(result == ENS220::Result::Ok)
+    auto result = ens220.update();
+    if(result == RESULT_OK)
     {
-        if(hasFlag(ens220.getDataStatus(), ENS220::DataStatus::PressureReady) && hasFlag(ens220.getDataStatus(), ENS220::DataStatus::TemperatureReady))
+        if(ens220.hasDataStatusFlag(ENS220_DATA_STATUS_PRESSURE_READY) && ens220.hasDataStatusFlag(ENS220_DATA_STATUS_TEMPERATURE_READY))
         {
             *pressure_pa = ens220.getPressurePascal();
             *temperature_k = ens220.getTempKelvin();
@@ -267,11 +272,11 @@ void SingleShot_Measure(float* temperature_k, float* pressure_pa)
     }
 }
 
-void ConfigureAlgorithmConstants(double min_height_diff_m, double min_impact_height_m, double max_height_diff_m, int32_t window_size, 
+void ConfigureAlgorithmConstants(double min_height_diff_m, double min_impact_height_m, double max_height_diff_m, int32_t window_size,
     double baseline_update_period)
 {
     algorithm_constants.min_diff_th = (int)(min_height_diff_m * CONVERSION_PA_TO_RAW / conversion_pa_to_m);
-	algorithm_constants.min_spike_th = (int)(min_impact_height_m * CONVERSION_PA_TO_RAW / conversion_pa_to_m); 
+	algorithm_constants.min_spike_th = (int)(min_impact_height_m * CONVERSION_PA_TO_RAW / conversion_pa_to_m);
 	algorithm_constants.baseline_max_diff_th = (int)(max_height_diff_m * CONVERSION_PA_TO_RAW / conversion_pa_to_m);
     algorithm_constants.baseline_update_period = baseline_update_period;
     algorithm_constants.window_size = window_size;
@@ -286,7 +291,7 @@ void InitializeAlgorithmState(int initial_pressure)
 float GetConversionFactorDryAirPaToM(float temperature_k, float pressure_pa)
 {
     // Calculates the conversion factor from a pressure difference in Pascal to a height in meters
-    // Assumes dry air properties  
+    // Assumes dry air properties
 
     // Calculate density of dry air in kg / m3
     float air_density_dry_air_kg_m3 = pressure_pa / (R_SPECIFIC_DRY_AIR_J_KGK * temperature_k);
