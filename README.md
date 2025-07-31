@@ -12,8 +12,8 @@ This enables new use cases in activity tracking, indoor navigation/localization,
 * Application notes 
   - [Event Detection](https://www.sciosense.com/wp-content/uploads/2024/04/ENS220-Application-Note-Indoor-Event-Detection.pdf)
   - [Fall Detection](https://www.sciosense.com/wp-content/uploads/2024/12/ENS220-Application-Note-Fall-Detection.pdf.pdf)
-* Buy the ENS220 on [Mouser](https://mou.sr/3K2wfLJ) or [Digikey](https://www.digikey.nl/en/products/detail/sciosense/ens220s-bglt/21278457)
-* Buy the ENS220 evaluation kit on [Mouser](https://mou.sr/3PQWatb)
+* Buy the ENS220 via [Mouser](https://mou.sr/3K2wfLJ) or [Digikey](https://www.digikey.nl/en/products/detail/sciosense/ens220s-bglt/21278457)
+* Buy the ENS220 evaluation kit via [Mouser](https://mou.sr/3PQWatb)
 * [Further information about the ENS220](https://www.sciosense.com/ens220-barometric-pressure-and-temperature-sensor/)
 
 ## Special Examples
